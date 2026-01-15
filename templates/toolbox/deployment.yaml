@@ -25,7 +25,8 @@ spec:
           image: "{{ .Values.imageRepository }}/toolbox:{{ .Chart.Version }}"
           imagePullPolicy: Always
           name: toolbox
-          resources: {}
+          resources:
+            {{- toYaml .Values.operator.toolbox.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /app/toolbox/config
               name: toolbox-config

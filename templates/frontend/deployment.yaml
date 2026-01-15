@@ -63,6 +63,8 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
           readinessProbe:
             failureThreshold: 3
             initialDelaySeconds: 5

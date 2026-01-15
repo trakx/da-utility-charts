@@ -63,4 +63,6 @@ spec:
             value: "{{ .Values.autoTopup.commercial.minThreshold }}"
           - name: COMMERCIAL_AGREEMENT_TOPUP_MAX_AMULET_BALANCE
             value: "{{ .Values.autoTopup.commercial.maxBalance }}"
+          resources:
+            {{- toYaml .Values.autoTopup.resources | nindent 12 }}
 {{- end -}}

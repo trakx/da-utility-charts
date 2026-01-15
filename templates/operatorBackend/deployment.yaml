@@ -74,8 +74,8 @@ spec:
                   fieldPath: status.hostIP
             - name: JAVA_TOOL_OPTIONS
               value: >-
-                -Xms3g
-                -Xmx3g
+                -Xms{{ .Values.operator.backend.jvmMemory }}
+                -Xmx{{ .Values.operator.backend.jvmMemory }}
                 -XX:+HeapDumpOnOutOfMemoryError
                 -XX:HeapDumpPath=/heap-dumps/heapdump.hprof
                 {{- if .Values.observability.datadogEnabled }} -Dcats.effect.trackFiberContext=true{{- end }}
@@ -103,12 +103,7 @@ spec:
             - containerPort: 8080
               protocol: TCP
           resources:
-            limits:
-              cpu: "2"
-              memory: 6Gi
-            requests:
-              cpu: "1"
-              memory: 4Gi
+            {{- toYaml .Values.operator.backend.resources | nindent 12 }}
           volumeMounts:
             - name: token-url-discovery
               mountPath: /token-url-discovery

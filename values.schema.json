@@ -53,6 +53,29 @@
                     "description": "Cron schedule for when to run the topup",
                     "type": "string",
                     "pattern": "^((((\\d+,)+\\d+|(\\d+(\\/|-|#)\\d+)|\\d+L?|\\*(\\/\\d+)?|L(-\\d+)?|\\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the auto topup container",
+                    "type": "object",
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": { "type": "string" },
+                                "memory": { "type": "string" }
+                            },
+                            "additionalProperties": false
+                        },
+                        "requests": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": { "type": "string" },
+                                "memory": { "type": "string" }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false
@@ -97,6 +120,29 @@
                         "issuerUri": {
                             "description": "IDP issuer uri for callback.  Optional",
                             "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the frontend container",
+                    "type": "object",
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": { "type": "string" },
+                                "memory": { "type": "string" }
+                            },
+                            "additionalProperties": false
+                        },
+                        "requests": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": { "type": "string" },
+                                "memory": { "type": "string" }
+                            },
+                            "additionalProperties": false
                         }
                     },
                     "additionalProperties": false
@@ -210,6 +256,40 @@
             },
             "additionalProperties": false
         },
+        "ingress": {
+            "type": "object",
+            "description": "Ingress (traefik) settings",
+            "properties": {
+                "replicaCount": {
+                    "description": "Number of replicas for the ingress (traefik)",
+                    "type": "integer"
+                },
+                "resources": {
+                    "description": "Resource requests and limits for the ingress (traefik) container",
+                    "type": "object",
+                    "properties": {
+                        "limits": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": { "type": "string" },
+                                "memory": { "type": "string" }
+                            },
+                            "additionalProperties": false
+                        },
+                        "requests": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": { "type": "string" },
+                                "memory": { "type": "string" }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
         "observability": {
             "type": "object",
             "properties": {
@@ -242,6 +322,63 @@
                         "replicaCount": {
                             "description": "Number of replicas for the operator backend",
                             "type": "integer"
+                        },
+                        "resources": {
+                            "description": "Resource requests and limits for the operator backend container",
+                            "type": "object",
+                            "properties": {
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "requests": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "jvmMemory": {
+                            "description": "JVM memory settings (Xms and Xmx)",
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "darsyncer": {
+                    "description": "Darsyncer settings",
+                    "type": "object",
+                    "properties": {
+                        "resources": {
+                            "description": "Resource requests and limits for the darsyncer container",
+                            "type": "object",
+                            "properties": {
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "requests": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
                         }
                     },
                     "additionalProperties": false
@@ -311,12 +448,88 @@
                     },
                     "additionalProperties": false
                 },
+                "registry": {
+                    "description": "Registry operator automations settings",
+                    "type": "object",
+                    "properties": {
+                        "resources": {
+                            "description": "Resource requests and limits for the registry operator automations container",
+                            "type": "object",
+                            "properties": {
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "requests": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                },
                 "scribe": {
                     "type": "object",
                     "properties": {
                         "autoPruneEnabled": {
                             "description": "Enable scribe auto pruning",
                             "type": "boolean"
+                        },
+                        "resources": {
+                            "description": "Resource requests and limits for the scribe container",
+                            "type": "object",
+                            "properties": {
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "requests": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "autoPruneResources": {
+                            "description": "Resource requests and limits for the scribe auto-prune container",
+                            "type": "object",
+                            "properties": {
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "requests": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
                         }
                     },
                     "additionalProperties": false
@@ -324,6 +537,36 @@
                 "serviceAccountName": {
                     "description": "Service account to run the operator workloads as",
                     "type": "string"
+                },
+                "toolbox": {
+                    "description": "Toolbox settings",
+                    "type": "object",
+                    "properties": {
+                        "resources": {
+                            "description": "Resource requests and limits for the toolbox container",
+                            "type": "object",
+                            "properties": {
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                },
+                                "requests": {
+                                    "type": "object",
+                                    "properties": {
+                                        "cpu": { "type": "string" },
+                                        "memory": { "type": "string" }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
                 }
             },
             "additionalProperties": false

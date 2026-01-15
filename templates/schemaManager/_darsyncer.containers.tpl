@@ -19,12 +19,7 @@
     - name: OAUTH_DOMAIN
       value: {{ $oidc.issuerUri }}
   resources:
-    limits:
-      cpu: "1000m"
-      memory: "256Mi"
-    requests:
-      cpu: "500m"
-      memory: "128Mi"
+    {{- toYaml .Values.operator.darsyncer.resources | nindent 4 }}
   ports:
   - name: readyz
     containerPort: 8080

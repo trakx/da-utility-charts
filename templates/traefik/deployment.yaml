@@ -6,7 +6,7 @@ kind: Deployment
 metadata:
   name: "{{ .Release.Name }}-ingress"
 spec:
-  replicas: 2
+  replicas: {{ .Values.ingress.replicaCount }}
   selector:
     matchLabels:
       app: "{{ .Release.Name }}-ingress"
@@ -40,12 +40,7 @@ spec:
               path: /ping
               port: 8081
           resources:
-            limits:
-              cpu: "2"
-              memory: 1Gi
-            requests:
-              cpu: 100m
-              memory: 128Mi
+            {{- toYaml .Values.ingress.resources | nindent 12 }}
       volumes:
         - name: traefik-config
           configMap:

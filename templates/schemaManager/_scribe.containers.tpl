@@ -51,12 +51,7 @@
     {{- end }}
   image: "{{ .Values.imageRepository }}/scribe:0.6.12-debug"
   resources:
-    limits:
-      cpu: 1000m
-      memory: 3Gi
-    requests:
-      cpu: 500m
-      memory: 256Mi
+    {{- toYaml .Values.operator.scribe.resources | nindent 4 }}
   securityContext:
     readOnlyRootFilesystem: false
     runAsGroup: 65532
@@ -92,12 +87,7 @@
     {{- end }}
   image: "{{ .Values.imageRepository }}/validator-tools/backup-service:2.3.0"
   resources:
-    limits:
-      cpu: 1000m
-      memory: 1Gi
-    requests:
-      cpu: 500m
-      memory: 512Mi
+    {{- toYaml .Values.operator.scribe.autoPruneResources | nindent 4 }}
   securityContext:
     readOnlyRootFilesystem: false
     runAsGroup: 65532

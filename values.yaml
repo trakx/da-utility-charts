@@ -69,6 +69,16 @@ autoTopup:
   # @section -- Auto topup
   retry: 8
 
+  # -- Resource requests and limits for the auto topup container
+  # @section -- Auto topup
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
   # TODO - break this into two values, userParty and holderParty
   # -- Issuer party to use when topping up
   # @section -- Auto topup
@@ -105,6 +115,16 @@ frontend:
   # @section -- Frontend
   hostname: ""
 
+  # -- Resource requests and limits for the frontend container
+  # @section -- Frontend
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
   oidc:
     # -- IDP issuer uri for callback.  Optional
     # -- If not set the value from `network.oidc.issuerUri` will be used for deployment
@@ -135,6 +155,37 @@ operator:
     # @section -- Operator
     autoPruneEnabled: false
 
+    # -- Resource requests and limits for the scribe container
+    # @section -- Operator
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 3Gi
+      requests:
+        cpu: 500m
+        memory: 256Mi
+
+    # -- Resource requests and limits for the scribe auto-prune container
+    # @section -- Operator
+    autoPruneResources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 500m
+        memory: 512Mi
+
+  # -- Resource requests and limits for the darsyncer container
+  # @section -- Operator
+  darsyncer:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 256Mi
+      requests:
+        cpu: 500m
+        memory: 128Mi
+
   # -- Service account to run the operator workloads as
   # @section -- Operator
   serviceAccountName: default
@@ -149,6 +200,20 @@ operator:
     # -- Overriding list of parties for which the result contracts creation is disabled
     # @section -- Operator
     disableResultContractsContextParties: []
+
+    # -- Resource requests and limits for the operator backend container
+    # @section -- Operator
+    resources:
+      limits:
+        cpu: "2"
+        memory: 6Gi
+      requests:
+        cpu: "1"
+        memory: 4Gi
+
+    # -- JVM memory settings (Xms and Xmx)
+    # @section -- Operator
+    jvmMemory: 3g
 
   postgres:
     googleCloudSql:
@@ -188,6 +253,32 @@ operator:
   # @section -- Operator
   features: []
 
+  # -- Registry operator automations settings
+  # @section -- Operator
+  registry:
+    # -- Resource requests and limits for the registry operator automations container
+    # @section -- Operator
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 3Gi
+      requests:
+        cpu: 500m
+        memory: 256Mi
+
+  # -- Toolbox settings
+  # @section -- Operator
+  toolbox:
+    # -- Resource requests and limits for the toolbox container
+    # @section -- Operator
+    resources:
+      limits:
+        cpu: 500m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
   # -- Enable users to self-onboard without any operator interaction.
   # @section -- Operator
   enableSelfOnboarding: false
@@ -196,9 +287,24 @@ operator:
   # @section -- Operator
   appRewardBeneficiary: ""
 
-  # -- The operator’s weight. It defines how the app reward is split between the operator and the provider.
+  # -- The operator's weight. It defines how the app reward is split between the operator and the provider.
   # @section -- Operator
   appRewardWeight: 0.5
+
+ingress:
+  # -- Number of replicas for the ingress (traefik)
+  # @section -- Ingress
+  replicaCount: 2
+
+  # -- Resource requests and limits for the ingress (traefik) container
+  # @section -- Ingress
+  resources:
+    limits:
+      cpu: "2"
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
 observability:
   # -- Add datadog annotations to all workload for [auto discovery](https://docs.datadoghq.com/containers/kubernetes/integrations/?tab=annotations)
