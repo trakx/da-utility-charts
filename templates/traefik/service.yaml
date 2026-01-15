@@ -1,0 +1,18 @@
+{{- $enabled := ne (include "traefik.configmapData" . | trim) "" }}
+{{- if $enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: "{{ .Release.Name }}-ingress"
+  name: "{{ .Release.Name }}-ingress"
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  selector:
+    app: "{{ .Release.Name }}-ingress"
+
+{{ end }}

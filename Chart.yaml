@@ -1,0 +1,11 @@
+apiVersion: v2
+description: Canton Network Utilities
+keywords:
+- public
+maintainers:
+- email: cnu-infrastructure-engineering@digitalasset.com
+  name: Canton Network Utilities
+  url: https://www.digitalasset.com
+name: utilities
+type: application
+version: 0.10.16

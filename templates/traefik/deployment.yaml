@@ -1,0 +1,54 @@
+{{- $enabled := ne (include "traefik.configmapData" . | trim) "" }}
+{{- if $enabled }}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-ingress"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-ingress"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-ingress"
+    spec:
+      containers:
+        - name: traefik
+          image: traefik:v3.4
+          args:
+            - --entryPoints.web.address=:8080
+            - --providers.file.directory=/config
+            - --accesslog=true
+            - --entrypoints.traefik.address=:8081 # for health checks
+            - --ping=true
+            - --ping.entrypoint=traefik
+          ports:
+            - containerPort: 8080
+              name: http
+          volumeMounts:
+            - name: traefik-config
+              mountPath: /config
+          livenessProbe:
+            httpGet:
+              path: /ping
+              port: 8081
+          readinessProbe:
+            httpGet:
+              path: /ping
+              port: 8081
+          resources:
+            limits:
+              cpu: "2"
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+      volumes:
+        - name: traefik-config
+          configMap:
+            name: "{{ .Release.Name }}-traefik-config"
+
+{{ end }}

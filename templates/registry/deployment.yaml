@@ -1,0 +1,133 @@
+{{- if has "registry" .Values.operator.features -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-registry-operator-automations"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    app: "{{ .Release.Name }}-registry-operator-automations"
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-registry-operator-automations"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-registry-operator-automations"
+    spec:
+      containers:
+        - name: registry-operator-automations
+          image: "{{ .Values.imageRepository }}/registry-operator-automations:{{ .Chart.Version }}"
+          args:
+            {{- with .Values.operator.postgres }}
+            - --spring.datasource.url=jdbc:postgresql://{{.host}}:{{.port}}/{{.database}}?currentSchema=pqs
+            {{- end }}
+            - --app.core.scan-proxy-api.enabled=true
+            - --app.core.scan-proxy-api.url=http://{{.Values.network.validator.host}}:{{.Values.network.validator.ports.http}}/api/validator
+            - --app.core.auth.audience={{ .Values.network.oidc.audience }}
+            - --app.core.auth.openIdUrl={{ .Values.network.oidc.issuerUri | trimSuffix "/" }}/.well-known/openid-configuration
+            - --app.core.participant.host={{ .Values.network.participant.host }}
+            - --app.core.participant.port={{ .Values.network.participant.ports.ledger }}
+            - --app.core.web.security.cors.allowed-methods=GET,DELETE
+            - --app.registry.automations.execution.parallelism=1
+            - --app.registry.automations.execution.polling-interval=10s
+            - --app.registry.automations.execution.retry-parallelism=1
+            - --app.registry.automations.execution.retry.max-attempts=6
+            - --app.registry.automations.execution.retry.backoff.delay=1s
+            - --app.registry.automations.execution.retry.backoff.delay-factor=2
+            - --app.registry.automations.execution.retry.backoff.max-delay=1m
+            - --app.registry.automations.execution.retry.timeout=5m
+            - --app.registry.automations.metrics.polling-interval=10s
+            - --app.registry.automations.provider-service-auto-accept.enabled={{ .Values.operator.enableSelfOnboarding | default "false" }}
+            - --app.registry.automations.provider-service-auto-accept.polling-interval=10s
+            - --app.registry.automations.provider-service-auto-accept.enableAppRewardBeneficiary={{ .Values.operator.enableSelfOnboarding | default "false" }}
+            {{- if .Values.operator.appRewardBeneficiary }}
+            - --app.registry.automations.provider-service-auto-accept.appRewardBeneficiaryPartyId={{ .Values.operator.appRewardBeneficiary }}
+            {{- end }}
+            - --app.registry.automations.provider-service-auto-accept.appRewardWeight={{ .Values.operator.appRewardWeight | default "1.0" }}
+            - --app.registry.operator.initialization.enabled=true
+            - --app.registry.operator.initialization.enable-self-onboarding={{ .Values.operator.enableSelfOnboarding }}
+            - --spring.datasource.username={{ .Values.operator.postgres.user }}
+            - --spring.security.oauth2.resourceserver.jwt.audiences={{ .Values.network.oidc.audience }}
+            - --spring.security.oauth2.resourceserver.jwt.issuer-uri={{ .Values.network.oidc.issuerUri }}
+          env:
+            {{- if .Values.operator.postgres.passwordSecretRef.name }}
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.operator.postgres.passwordSecretRef.name }}"
+                  key: "{{ .Values.operator.postgres.passwordSecretRef.key }}"
+            {{- end }}
+            - name: APP.CORE.AUTH.CLIENTID
+              value: "{{ .Values.network.oidc.clientId }}"
+            - name: APP.CORE.AUTH.CLIENTSECRET
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.network.oidc.clientSecret.name }}"
+                  key: "{{ .Values.network.oidc.clientSecret.key }}"
+            - name: APP.CORE.PARTICIPANT.USER
+              value: "{{ .Values.network.participant.user }}"
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: LOG_LEVEL_ROOT
+              value: INFO
+            {{- if .Values.observability.datadogEnabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://$(HOST_IP):4317
+            - name: OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED
+              value: "true"
+            - name: OTEL_LOGS_EXPORTER
+              value: console
+            - name: OTEL_METRICS_EXPORTER
+              value: otlp
+            - name: OTEL_SDK_ENABLED
+              value: "true"
+            - name: OTEL_SERVICE_NAME
+              value: registry-operator-automations
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            {{- end }}
+          livenessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /api/registry/livez
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 60
+            timeoutSeconds: 10
+          ports:
+            - containerPort: 8080
+              name: http
+              protocol: TCP
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /api/registry/readyz
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 3Gi
+            requests:
+              cpu: 500m
+              memory: 256Mi
+      {{- if .Values.operator.postgres.googleCloudSql.instanceID }}
+      initContainers:
+        - args:
+            - --auto-iam-authn
+            - --private-ip
+            - --structured-logs
+            - {{ .Values.operator.postgres.googleCloudSql.instanceID }}
+          image: "{{ .Values.operator.postgres.googleCloudSql.proxyImage }}"
+          name: proxy
+          restartPolicy: Always
+      {{- end }}
+      serviceAccountName: "{{ .Values.operator.serviceAccountName }}"
+{{- end }}

@@ -1,0 +1,208 @@
+network:
+  participant:
+    # -- Username to connect with
+    # @section -- Network
+    user: ""
+
+    # -- Hostname
+    # @section -- Network
+    host: participant
+    ports:
+      # -- Admin port, used for installing dars
+      # @section -- Network
+      admin: 5002
+      # -- Ledger port
+      # @section -- Network
+      ledger: 5001
+      # -- Json api port
+      # @section -- Network
+      jsonApi: 7575
+
+  validator:
+    # -- Hostname
+    # @section -- Network
+    host: validator-app
+    ports:
+      # -- Http port, used for ui and api access
+      # @section -- Network
+      http: 5003
+
+  # -- Public endpoint for fetching the operator's party literal and explicitly disclosed contracts
+  # @section -- Network
+  operatorApiUrl: ""
+
+  oidc:
+    # -- IDP's issuer URI
+    # @section -- Network
+    issuerUri: ""
+
+    # -- Token audience
+    # @section -- Network
+    audience: https://canton.network.global
+
+    # -- Client ID for M2M access tokens
+    # @section -- Network
+    clientId: ""
+    clientSecret:
+      # -- K8s secret **name** containing the client secret
+      # @section -- Network
+      name: ""
+      # -- K8s secret **key** containing the client secret
+      # @section -- Network
+      key: ""
+
+    # -- Token scope
+    # @section -- Network
+    scope: daml_ledger_api
+
+# -- Base image repository
+imageRepository: europe-docker.pkg.dev/da-images/public/docker
+
+
+autoTopup:
+  # @schema pattern: ^((((\d+,)+\d+|(\d+(\/|-|#)\d+)|\d+L?|\*(\/\d+)?|L(-\d+)?|\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$
+  # -- Cron schedule for when to run the topup
+  # @section -- Auto topup
+  schedule: 0 0 * * *
+
+  # -- Retry count when topup fails
+  # @section -- Auto topup
+  retry: 8
+
+  # TODO - break this into two values, userParty and holderParty
+  # -- Issuer party to use when topping up
+  # @section -- Auto topup
+  issuerParty: ""
+
+  credential:
+    # -- Enable credential topup
+    # @section -- Auto topup
+    enabled: false
+    # -- Minimum threshold when to topup
+    # @section -- Auto topup
+    minThreshold: 5
+    # -- Topup to this balance
+    # @section -- Auto topup
+    maxBalance: 50
+
+  commercial:
+    # -- Enable commercial topup
+    # @section -- Auto topup
+    enabled: false
+    # -- Minimum threshold when to topup
+    # @section -- Auto topup
+    minThreshold: 934000
+    # -- Topup to this balance
+    # @section -- Auto topup
+    maxBalance: 935000
+
+frontend:
+  # -- Enable the frontend
+  # @section -- Frontend
+  enabled: false
+
+  # -- The hostname for the frontend
+  # @section -- Frontend
+  hostname: ""
+
+  oidc:
+    # -- IDP issuer uri for callback.  Optional
+    # -- If not set the value from `network.oidc.issuerUri` will be used for deployment
+    # @section -- Frontend
+    issuerUri: ""
+
+    # -- Token audience
+    # @section -- Frontend
+    audience: https://canton.network.global
+
+    # -- IDP client ID for callback
+    # @section -- Frontend
+    clientId: ""
+
+  # -- Branding settings. Optional
+  # @section -- Frontend
+  branding:
+    # -- UI's app name
+    # @section -- Frontend
+    appName: ""
+    # -- UI's theme
+    # @section -- Frontend
+    theme: ""
+
+operator:
+  scribe:
+    # -- Enable scribe auto pruning
+    # @section -- Operator
+    autoPruneEnabled: false
+
+  # -- Service account to run the operator workloads as
+  # @section -- Operator
+  serviceAccountName: default
+
+  # -- Operator backend settings
+  # @section -- Operator
+  backend:
+    # -- Number of replicas for the operator backend
+    # @section -- Operator
+    replicaCount: 1
+
+    # -- Overriding list of parties for which the result contracts creation is disabled
+    # @section -- Operator
+    disableResultContractsContextParties: []
+
+  postgres:
+    googleCloudSql:
+      # -- Instance ID if using google cloudsql, setting this will enable the [cloudsql sidecar](https://cloud.google.com/sql/docs/postgres/sql-proxy)
+      # @section -- Operator
+      instanceID: ""
+      # -- Google cloudsql proxy sidecare image
+      # @section -- Operator
+      proxyImage: europe-docker.pkg.dev/da-images/remote-gcr/cloud-sql-connectors/cloud-sql-proxy:2.17.1
+
+    # -- Database name
+    # @section -- Operator
+    database: cnu-utilities
+
+    # -- Database hostname
+    # @section -- Operator
+    host: ""
+
+    # -- Database port
+    # @section -- Operator
+    port: 5432
+
+    # -- Database username
+    # @section -- Operator
+    user: cnu-utilities-user
+
+    passwordSecretRef:
+      # -- K8s secret **name** containing the postgres user password
+      # @section -- Operator
+      name: ""
+      # -- K8s secret **key** containing the postgres user password
+      # @section -- Operator
+      key: ""
+
+  # @schema itemEnum:[operatorBackend,registry,toolbox]
+  # -- Operator feature list, allowed features are: `operatorBackend`, `registry`, and `toolbox`
+  # @section -- Operator
+  features: []
+
+  # -- Enable users to self-onboard without any operator interaction.
+  # @section -- Operator
+  enableSelfOnboarding: false
+
+  # -- App reward beneficiary party id of the operator.
+  # @section -- Operator
+  appRewardBeneficiary: ""
+
+  # -- The operator’s weight. It defines how the app reward is split between the operator and the provider.
+  # @section -- Operator
+  appRewardWeight: 0.5
+
+observability:
+  # -- Add datadog annotations to all workload for [auto discovery](https://docs.datadoghq.com/containers/kubernetes/integrations/?tab=annotations)
+  # @section -- Observability
+  datadogEnabled: false
+
+global: {} # @schema additionalProperties: true

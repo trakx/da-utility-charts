@@ -1,0 +1,49 @@
+{{- if has "toolbox" .Values.operator.features -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-toolbox"
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-toolbox"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-toolbox"
+    spec:
+      containers:
+        - env:
+            {{- if .Values.operator.postgres.passwordSecretRef.name }}
+            - name: SUPPORT_POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.operator.postgres.passwordSecretRef.name }}"
+                  key: "{{ .Values.operator.postgres.passwordSecretRef.key }}"
+            {{- end }}
+          image: "{{ .Values.imageRepository }}/toolbox:{{ .Chart.Version }}"
+          imagePullPolicy: Always
+          name: toolbox
+          resources: {}
+          volumeMounts:
+            - mountPath: /app/toolbox/config
+              name: toolbox-config
+      {{- if .Values.operator.postgres.googleCloudSql.instanceID }}
+      initContainers:
+        - args:
+            - --auto-iam-authn
+            - --private-ip
+            - --structured-logs
+            - {{ .Values.operator.postgres.googleCloudSql.instanceID }}
+          image: "{{ .Values.operator.postgres.googleCloudSql.proxyImage }}"
+          name: proxy
+          restartPolicy: Always
+      {{- end }}
+      securityContext: {}
+      serviceAccountName: "{{ .Values.operator.serviceAccountName }}"
+      volumes:
+        - name: toolbox-config
+          configMap:
+            name: "{{ .Release.Name }}-toolbox-config"
+  {{- end }}

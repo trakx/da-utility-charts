@@ -1,0 +1,18 @@
+{{- if has "registry" .Values.operator.features -}}
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: "{{ .Release.Name }}-registry-operator-automations"
+  name: "{{ .Release.Name }}-registry-app-automations"
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: http
+  selector:
+    app: "{{ .Release.Name }}-registry-operator-automations"
+  type: ClusterIP
+{{- end }}

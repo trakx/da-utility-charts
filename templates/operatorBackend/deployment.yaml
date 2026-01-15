@@ -1,0 +1,165 @@
+{{- if has "operatorBackend" .Values.operator.features -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-operator-backend"
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-operator-backend"
+  strategy:
+    type: RollingUpdate
+  replicas: {{ .Values.operator.backend.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-operator-backend"
+    spec:
+      containers:
+        - command:
+            - sh
+            - -c
+            - export SERVICE_ACCOUNT_TOKEN_URL=$(cat /token-url-discovery/token-url.txt); java -jar /app/backend.jar --modules utilities
+          env:
+            - name: ADMIN_API_HOST
+              value: "{{ .Values.network.participant.host }}"
+            - name: ADMIN_API_PORT
+              value: "{{ .Values.network.participant.ports.admin }}"
+            - name: AUTH0_TENANT
+              value: "{{ .Values.network.oidc.issuerUri }}"
+            - name: AUTH_AUDIENCE
+              value: "{{ .Values.network.oidc.audience }}"
+            - name: LEDGER_API_HOST
+              value: "{{ .Values.network.participant.host }}"
+            - name: LEDGER_API_PORT
+              value: "{{ .Values.network.participant.ports.ledger }}"
+            - name: PQS_DB
+              value: "{{ .Values.operator.postgres.database }}"
+            - name: PQS_HOST
+              value: "{{ .Values.operator.postgres.host }}"
+            - name: PQS_USER
+              value:  "{{ .Values.operator.postgres.user }}"
+            - name: PQS_PORT
+              value: "{{ .Values.operator.postgres.port }}"
+            - name: PQS_SCHEMA
+              value: "pqs"
+            {{- if .Values.operator.postgres.passwordSecretRef.name }}
+            - name: PQS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.operator.postgres.passwordSecretRef.name }}"
+                  key: "{{ .Values.operator.postgres.passwordSecretRef.key }}"
+            {{- end }}
+            - name: SERVICE_ACCOUNT_AUDIENCE
+              value: "{{ .Values.network.oidc.audience }}"
+            - name: SERVICE_ACCOUNT_CLIENT_ID
+              value: "{{ .Values.network.oidc.clientId }}"
+            - name: SERVICE_ACCOUNT_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ .Values.network.oidc.clientSecret.name }}"
+                  key: "{{ .Values.network.oidc.clientSecret.key }}"
+            - name: SERVICE_ACCOUNT_GRANT_TYPE
+              value: client_credentials
+            - name: SERVICE_ACCOUNT_SCOPE
+              value: "{{ .Values.network.oidc.scope }}"
+            - name: VALIDATOR_URL
+              value: "{{ .Values.network.validator.host }}:{{ .Values.network.validator.ports.http }}"
+            - name: DISABLE_RESULT_CONTRACTS_CONTEXT_PARTIES
+              value: {{ .Values.operator.backend.disableResultContractsContextParties | join "," | quote }}
+            - name: HOST_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -Xms3g
+                -Xmx3g
+                -XX:+HeapDumpOnOutOfMemoryError
+                -XX:HeapDumpPath=/heap-dumps/heapdump.hprof
+                {{- if .Values.observability.datadogEnabled }} -Dcats.effect.trackFiberContext=true{{- end }}
+            {{- if .Values.observability.datadogEnabled }}
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://$(HOST_IP):4317
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: grpc
+            - name: OTEL_JAVA_GLOBAL_AUTOCONFIGURE_ENABLED
+              value: "true"
+            - name: OTEL_LOGS_EXPORTER
+              value: console
+            - name: OTEL_METRICS_EXPORTER
+              value: otlp
+            - name: OTEL_SDK_ENABLED
+              value: "true"
+            - name: OTEL_SERVICE_NAME
+              value: utility-api-services
+            - name: OTEL_TRACES_EXPORTER
+              value: otlp
+            {{- end }}
+          image: "{{ .Values.imageRepository }}/hosted-backend:{{ .Chart.Version }}"
+          name: operator-backend
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+            limits:
+              cpu: "2"
+              memory: 6Gi
+            requests:
+              cpu: "1"
+              memory: 4Gi
+          volumeMounts:
+            - name: token-url-discovery
+              mountPath: /token-url-discovery
+            - name: heap-dumps
+              mountPath: /heap-dumps
+          livenessProbe:
+            httpGet:
+              path: /livez
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 25
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+
+      initContainers:
+        {{- if .Values.operator.postgres.googleCloudSql.instanceID }}
+        # CloudSQL proxy
+        - args:
+            - --auto-iam-authn
+            - --private-ip
+            - --structured-logs
+            - {{ .Values.operator.postgres.googleCloudSql.instanceID }}
+          image: "{{ .Values.operator.postgres.googleCloudSql.proxyImage }}"
+          name: proxy
+          restartPolicy: Always
+        {{- end }}
+        # Token URL discovery (TOOD: eventually our application code should handle this)
+        - name: token-url-discovery
+          image: "{{ .Values.imageRepository }}/validator-tools/get-token-endpoint:2.3.0"
+          env:
+            - name: ISSUER_URI
+              value: {{ .Values.network.oidc.issuerUri }}
+            - name: OUTPUT_FILE
+              value: /token-url-discovery/token-url.txt
+          volumeMounts:
+            - name: token-url-discovery
+              mountPath: /token-url-discovery
+      volumes:
+        - name: token-url-discovery
+          emptyDir: {}
+        - name: heap-dumps
+          emptyDir: {}
+      serviceAccountName: "{{ .Values.operator.serviceAccountName }}"
+{{- end }}

@@ -1,0 +1,66 @@
+{{- if or .Values.autoTopup.commercial.enabled .Values.autoTopup.credential.enabled -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-auto-topup"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    app: "{{ .Release.Name }}-auto-topup"
+spec:
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-auto-topup"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-auto-topup"
+    spec:
+      containers:
+        - name: auto-topup
+          image: "{{ .Values.imageRepository }}/auto-topup:{{ .Chart.Version }}"
+          env:
+
+          # auth settings
+          - name: OAUTH_OIDC_CONF_URL
+            value: "{{ .Values.network.oidc.issuerUri }}"
+          - name: OAUTH_CLIENT_ID
+            value: "{{ .Values.network.oidc.clientId }}"
+          - name: OAUTH_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                {{- toYaml .Values.network.oidc.clientSecret | nindent 16 }}
+          - name: OAUTH_AUDIENCE
+            value: "{{ .Values.network.oidc.audience }}"
+          - name: JSON_API_URL
+            value: "http://{{ .Values.network.participant.host }}:{{ .Values.network.participant.ports.jsonApi }}/api/json-api"
+          - name: SP_API_URL
+            value: "http://{{ .Values.network.validator.host }}:{{ .Values.network.validator.ports.http }}/api/validator"
+          - name: MINING_ROUND_OPEN_TIME_OFFSET_SECONDS
+            value: "30"
+
+          # runtime settings
+          - name: AUTO_TOPUP_CRON_SCHEDULE
+            value: "{{ .Values.autoTopup.schedule }}"
+          - name: MAX_RETRY_TOPUP_COUNT
+            value: "{{ .Values.autoTopup.retry }}"
+
+          # TODO - break this into two values, userParty and holderParty
+          - name: ISSUER
+            value: "{{ .Values.autoTopup.issuerParty }}"
+
+          # credential settings
+          - name: ENABLE_CREDENTIAL_BILLING_TOPUP
+            value: "{{ .Values.autoTopup.credential.enabled }}"
+          - name: CREDENTIAL_BILLING_TOPUP_MIN_AMULET_BALANCE
+            value: "{{ .Values.autoTopup.credential.minThreshold }}"
+          - name: CREDENTIAL_BILLING_TOPUP_MAX_AMULET_BALANCE
+            value: "{{ .Values.autoTopup.credential.maxBalance }}"
+
+          # commercial settings
+          - name: ENABLE_COMMERCIAL_AGREEMENT_TOPUP
+            value: "{{ .Values.autoTopup.commercial.enabled }}"
+          - name: COMMERCIAL_AGREEMENT_TOPUP_MIN_AMULET_BALANCE
+            value: "{{ .Values.autoTopup.commercial.minThreshold }}"
+          - name: COMMERCIAL_AGREEMENT_TOPUP_MAX_AMULET_BALANCE
+            value: "{{ .Values.autoTopup.commercial.maxBalance }}"
+{{- end -}}

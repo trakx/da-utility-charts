@@ -1,0 +1,45 @@
+{{- $installScribe := empty .Values.operator.features | not -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-schema-manager"
+  namespace: "{{ .Release.Namespace }}"
+  labels:
+    app: "{{ .Release.Name }}-schema-manager"
+spec:
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-schema-manager"
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-schema-manager"
+      {{- if and $installScribe .Values.observability.datadogEnabled }}
+      annotations:
+        ad.datadoghq.com/scribe.check.id: scribe
+        ad.datadoghq.com/scribe.check_names: '["openmetrics"]'
+        ad.datadoghq.com/scribe.init_configs: '[{}]'
+        ad.datadoghq.com/scribe.instances: '[{"openmetrics_endpoint": "http://%%host%%:9090/metrics",
+          "metrics": [".*"]}]'
+      {{- end }}
+    spec:
+      {{- if $installScribe }}
+      serviceAccountName: "{{ .Values.operator.serviceAccountName }}"
+      initContainers:
+        {{- include "darsyncer.containers" . | indent 8 }}
+          restartPolicy: Always
+        {{- include "scribe.initContainers" . | indent 8 }}
+      {{- end }}
+
+      containers:
+      {{- if $installScribe }}
+        {{ include "scribe.containers" . | indent 8 }}
+      {{- else }}
+        {{- include "darsyncer.containers" . | indent 8 }}
+      {{- end }}
+
+      volumes:
+        - name: shared-data
+          emptyDir: {}

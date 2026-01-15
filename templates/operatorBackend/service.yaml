@@ -1,0 +1,13 @@
+{{- if has "operatorBackend" .Values.operator.features -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: "{{ .Release.Name }}-operator-backend"
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  ports:
+    - port: 8080
+      protocol: TCP
+  selector:
+    app: "{{ .Release.Name }}-operator-backend"
+{{- end }}

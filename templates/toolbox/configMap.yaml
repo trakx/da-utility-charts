@@ -1,0 +1,37 @@
+{{- if has "toolbox" .Values.operator.features -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    app: "{{ .Release.Name }}-toolbox-config"
+  name: "{{ .Release.Name }}-toolbox-config"
+  namespace: "{{ .Release.Namespace }}"
+data:
+  canton-remote.conf: |
+    canton {
+      features {
+        enable-preview-commands = yes
+        enable-testing-commands = yes
+      }
+      remote-participants.participant {
+        ledger-api {
+          address = participant.{{ .Release.Namespace }}.svc.cluster.local
+          port = 5001
+        }
+        admin-api {
+          address = participant.{{ .Release.Namespace }}.svc.cluster.local
+          port = 5002
+        }
+        token = ${?TOKEN}
+      }
+    }
+  daml-shell.conf: |
+    postgres-host = {{ .Values.operator.postgres.host }}
+    postgres-port = {{ .Values.operator.postgres.port }}
+    postgres-username = "{{ .Values.operator.postgres.user }}"
+    postgres-database = {{ .Values.operator.postgres.database }}
+    postgres-schema = pqs
+    postgres-tls-mode = Disable
+    wildcard-char = "*"
+    full-identifiers = true
+  {{- end }}

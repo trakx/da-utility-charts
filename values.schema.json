@@ -1,0 +1,333 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "autoTopup": {
+            "type": "object",
+            "properties": {
+                "commercial": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Enable commercial topup",
+                            "type": "boolean"
+                        },
+                        "maxBalance": {
+                            "description": "Topup to this balance",
+                            "type": "integer"
+                        },
+                        "minThreshold": {
+                            "description": "Minimum threshold when to topup",
+                            "type": "integer"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "credential": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "description": "Enable credential topup",
+                            "type": "boolean"
+                        },
+                        "maxBalance": {
+                            "description": "Topup to this balance",
+                            "type": "integer"
+                        },
+                        "minThreshold": {
+                            "description": "Minimum threshold when to topup",
+                            "type": "integer"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "issuerParty": {
+                    "description": "Issuer party to use when topping up",
+                    "type": "string"
+                },
+                "retry": {
+                    "description": "Retry count when topup fails",
+                    "type": "integer"
+                },
+                "schedule": {
+                    "description": "Cron schedule for when to run the topup",
+                    "type": "string",
+                    "pattern": "^((((\\d+,)+\\d+|(\\d+(\\/|-|#)\\d+)|\\d+L?|\\*(\\/\\d+)?|L(-\\d+)?|\\?|[A-Z]{3}(-[A-Z]{3})?) ?){5,7})$"
+                }
+            },
+            "additionalProperties": false
+        },
+        "frontend": {
+            "type": "object",
+            "properties": {
+                "branding": {
+                    "description": "Branding settings. Optional",
+                    "type": "object",
+                    "properties": {
+                        "appName": {
+                            "description": "UI's app name",
+                            "type": "string"
+                        },
+                        "theme": {
+                            "description": "UI's theme",
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "enabled": {
+                    "description": "Enable the frontend",
+                    "type": "boolean"
+                },
+                "hostname": {
+                    "description": "The hostname for the frontend",
+                    "type": "string"
+                },
+                "oidc": {
+                    "type": "object",
+                    "properties": {
+                        "audience": {
+                            "description": "Token audience",
+                            "type": "string"
+                        },
+                        "clientId": {
+                            "description": "IDP client ID for callback",
+                            "type": "string"
+                        },
+                        "issuerUri": {
+                            "description": "IDP issuer uri for callback.  Optional",
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "global": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "imageRepository": {
+            "description": "Base image repository",
+            "type": "string"
+        },
+        "network": {
+            "type": "object",
+            "properties": {
+                "oidc": {
+                    "type": "object",
+                    "properties": {
+                        "audience": {
+                            "description": "Token audience",
+                            "type": "string"
+                        },
+                        "clientId": {
+                            "description": "Client ID for M2M access tokens",
+                            "type": "string"
+                        },
+                        "clientSecret": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "description": "K8s secret **key** containing the client secret",
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "description": "K8s secret **name** containing the client secret",
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "issuerUri": {
+                            "description": "IDP's issuer URI",
+                            "type": "string"
+                        },
+                        "scope": {
+                            "description": "Token scope",
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "operatorApiUrl": {
+                    "description": "Public endpoint for fetching the operator's party literal and explicitly disclosed contracts",
+                    "type": "string"
+                },
+                "participant": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "Hostname",
+                            "type": "string"
+                        },
+                        "ports": {
+                            "type": "object",
+                            "properties": {
+                                "admin": {
+                                    "description": "Admin port, used for installing dars",
+                                    "type": "integer"
+                                },
+                                "jsonApi": {
+                                    "description": "Json api port",
+                                    "type": "integer"
+                                },
+                                "ledger": {
+                                    "description": "Ledger port",
+                                    "type": "integer"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "user": {
+                            "description": "Username to connect with",
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "validator": {
+                    "type": "object",
+                    "properties": {
+                        "host": {
+                            "description": "Hostname",
+                            "type": "string"
+                        },
+                        "ports": {
+                            "type": "object",
+                            "properties": {
+                                "http": {
+                                    "description": "Http port, used for ui and api access",
+                                    "type": "integer"
+                                }
+                            },
+                            "additionalProperties": false
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            },
+            "additionalProperties": false
+        },
+        "observability": {
+            "type": "object",
+            "properties": {
+                "datadogEnabled": {
+                    "description": "Add datadog annotations to all workload for [auto discovery](https://docs.datadoghq.com/containers/kubernetes/integrations/?tab=annotations)",
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "operator": {
+            "type": "object",
+            "properties": {
+                "appRewardBeneficiary": {
+                    "description": "App reward beneficiary party id of the operator.",
+                    "type": "string"
+                },
+                "appRewardWeight": {
+                    "description": "The operator’s weight. It defines how the app reward is split between the operator and the provider.",
+                    "type": "number"
+                },
+                "backend": {
+                    "description": "Operator backend settings",
+                    "type": "object",
+                    "properties": {
+                        "disableResultContractsContextParties": {
+                            "description": "Overriding list of parties for which the result contracts creation is disabled",
+                            "type": "array"
+                        },
+                        "replicaCount": {
+                            "description": "Number of replicas for the operator backend",
+                            "type": "integer"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "enableSelfOnboarding": {
+                    "description": "Enable users to self-onboard without any operator interaction.",
+                    "type": "boolean"
+                },
+                "features": {
+                    "description": "Operator feature list, allowed features are: `operatorBackend`, `registry`, and `toolbox`",
+                    "type": "array",
+                    "items": {
+                        "enum": [
+                            "operatorBackend",
+                            "registry",
+                            "toolbox"
+                        ]
+                    }
+                },
+                "postgres": {
+                    "type": "object",
+                    "properties": {
+                        "database": {
+                            "description": "Database name",
+                            "type": "string"
+                        },
+                        "googleCloudSql": {
+                            "type": "object",
+                            "properties": {
+                                "instanceID": {
+                                    "description": "Instance ID if using google cloudsql, setting this will enable the [cloudsql sidecar](https://cloud.google.com/sql/docs/postgres/sql-proxy)",
+                                    "type": "string"
+                                },
+                                "proxyImage": {
+                                    "description": "Google cloudsql proxy sidecare image",
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "host": {
+                            "description": "Database hostname",
+                            "type": "string"
+                        },
+                        "passwordSecretRef": {
+                            "type": "object",
+                            "properties": {
+                                "key": {
+                                    "description": "K8s secret **key** containing the postgres user password",
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "description": "K8s secret **name** containing the postgres user password",
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": false
+                        },
+                        "port": {
+                            "description": "Database port",
+                            "type": "integer"
+                        },
+                        "user": {
+                            "description": "Database username",
+                            "type": "string"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "scribe": {
+                    "type": "object",
+                    "properties": {
+                        "autoPruneEnabled": {
+                            "description": "Enable scribe auto pruning",
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": false
+                },
+                "serviceAccountName": {
+                    "description": "Service account to run the operator workloads as",
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "additionalProperties": false
+}

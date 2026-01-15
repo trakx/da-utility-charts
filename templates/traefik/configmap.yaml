@@ -1,0 +1,10 @@
+{{- $data := include "traefik.configmapData" . | trim }}
+{{- $enabled := ne $data "" }}
+{{- if $enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: "{{ .Release.Name }}-traefik-config"
+data:
+{{ $data | indent 2 }}
+{{ end }}

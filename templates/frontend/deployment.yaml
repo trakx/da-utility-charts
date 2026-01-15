@@ -1,0 +1,74 @@
+{{- if .Values.frontend.enabled -}}
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: "{{ .Release.Name }}"
+  name: "{{ .Release.Name }}"
+  namespace: "{{ .Release.Namespace }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}"
+    spec:
+      containers:
+        - securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            allowPrivilegeEscalation: false
+            #readOnlyRootFilesystem: true
+          env:
+            - name: BITNAMI_DEBUG
+              value: "false"
+            - name: NGINX_HTTP_PORT_NUMBER
+              value: "8080"
+            - name: AUTH_AUTHORITY
+              value: "{{ .Values.frontend.oidc.issuerUri | default .Values.network.oidc.issuerUri }}"
+            - name: AUTH_CLIENT_ID
+              value: "{{ .Values.frontend.oidc.clientId }}"
+            - name: AUTH_AUDIENCE
+              value: "{{ .Values.frontend.oidc.audience }}"
+            - name: UTILITY_APP_MODE
+              value: utility
+            - name: UTILITY_APP_UTILITY_BACKEND_URL
+              value: "{{ .Values.network.operatorApiUrl }}"
+          {{- $branding := .Values.frontend.branding }}
+          {{- if not (empty $branding.appName) }}
+            - name: "UTILITY_APP_NAME"
+              value: {{ $branding.appName }}
+          {{- end }}
+          {{- if not (empty $branding.theme) }}
+            - name: "UTILITY_APP_THEME"
+              value: {{ $branding.theme }}
+          {{- end }}
+
+          image: "{{ .Values.imageRepository }}/frontend:{{ .Chart.Version }}"
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: http
+            timeoutSeconds: 5
+          name: frontend
+          ports:
+            - containerPort: 8080
+              name: http
+          readinessProbe:
+            failureThreshold: 3
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            tcpSocket:
+              port: http
+            timeoutSeconds: 3
+{{- end }}
