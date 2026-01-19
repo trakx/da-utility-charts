@@ -76,6 +76,11 @@
                         }
                     },
                     "additionalProperties": false
+                },
+                "nodeSelector": {
+                    "description": "Node selector for the auto topup pod (e.g., for architecture pinning)",
+                    "type": "object",
+                    "additionalProperties": { "type": "string" }
                 }
             },
             "additionalProperties": false
@@ -146,6 +151,11 @@
                         }
                     },
                     "additionalProperties": false
+                },
+                "nodeSelector": {
+                    "description": "Node selector for the frontend pod (e.g., for architecture pinning)",
+                    "type": "object",
+                    "additionalProperties": { "type": "string" }
                 }
             },
             "additionalProperties": false

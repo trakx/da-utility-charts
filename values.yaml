@@ -79,6 +79,11 @@ autoTopup:
       cpu: 100m
       memory: 128Mi
 
+  # -- Node selector for the auto topup pod (e.g., for architecture pinning)
+  # @section -- Auto topup
+  nodeSelector:
+    kubernetes.io/arch: amd64
+
   # TODO - break this into two values, userParty and holderParty
   # -- Issuer party to use when topping up
   # @section -- Auto topup
@@ -124,6 +129,11 @@ frontend:
     requests:
       cpu: 100m
       memory: 128Mi
+
+  # -- Node selector for the frontend pod (e.g., for architecture pinning)
+  # @section -- Frontend
+  nodeSelector:
+    kubernetes.io/arch: amd64
 
   oidc:
     # -- IDP issuer uri for callback.  Optional
